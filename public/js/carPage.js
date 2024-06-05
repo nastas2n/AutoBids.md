@@ -101,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 offerButton.removeEventListener('click', showLoginModal);
                 offerButton.addEventListener('click', placeBid);
             } else {
-                offerButton.disabled = true;
+                offerButton.disabled = false; // Make sure button is clickable to show modal
+                offerButton.removeEventListener('click', placeBid);
                 offerButton.addEventListener('click', showLoginModal);
             }
         });
@@ -109,90 +110,97 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showLoginModal(event) {
         event.preventDefault();
-        showModal("Autentificare necesară", "Trebuie să vă creați un cont sau să vă logați pentru a putea plasa o ofertă.");
+        showModal("Utilizatorul nu este autentificat", "Trebuie să vă creați un cont sau să vă logați pentru a putea plasa o ofertă.");
     }
 
     function placeBid() {
-        const bidAmountInput = document.getElementById('bidAmount').value;
-        const bidAmount = Number(bidAmountInput);
+        auth.currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+            // Send token to your backend via HTTPS
+            const bidAmountInput = document.getElementById('bidAmount').value;
+            const bidAmount = Number(bidAmountInput);
     
-        if (isNaN(bidAmount) || bidAmount <= 0) {
-            showModal("Eroare de ofertă", "Vă rugăm să introduceți o sumă validă pentru ofertă.");
-            return;
-        }
-    
-        console.log('Placing bid:', bidAmount);
-    
-        db.collection("cars").doc(vin).get().then((doc) => {
-            if (!doc.exists) {
-                console.error("Document does not exist!");
-                showModal("Eroare de ofertă", "Documentul nu există.");
+            if (isNaN(bidAmount) || bidAmount <= 0) {
+                showModal("Eroare de ofertă", "Vă rugăm să introduceți o sumă validă pentru ofertă.");
                 return;
             }
     
-            const carData = doc.data();
-            const currentPrice = carData.currentPrice;
+            console.log('Placing bid:', bidAmount);
     
-            console.log('Current price:', currentPrice);
+            db.collection("cars").doc(vin).get().then((doc) => {
+                if (!doc.exists) {
+                    console.error("Document does not exist!");
+                    showModal("Eroare de ofertă", "Documentul nu există.");
+                    return;
+                }
     
-            if (bidAmount > currentPrice) {
-                db.collection("cars").doc(vin).update({
-                    currentPrice: bidAmount,
-                    Num_of_bids: carData.Num_of_bids + 1
-                }).then(() => {
-                    const user = auth.currentUser;
-                    if (user) {
-                        const userId = user.uid;
-                        const userDocRef = db.collection("users").doc(userId);
+                const carData = doc.data();
+                const currentPrice = carData.currentPrice;
     
-                        userDocRef.get().then((userDoc) => {
-                            if (!userDoc.exists) {
-                                userDocRef.set({
-                                    bids: [{
-                                        vin: vin,
-                                        amount: bidAmount
-                                    }]
-                                }).then(() => {
-                                    document.getElementById('bidAmount').value = '';
-                                    showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
-                                    console.log('User document created and bid added successfully');
-                                }).catch((error) => {
-                                    console.error("Error creating user document: ", error);
-                                    showModal("Eroare de ofertă", "A apărut o eroare la crearea contului dvs. Vă rugăm să încercați din nou.");
-                                });
-                            } else {
-                                userDocRef.update({
-                                    bids: firebase.firestore.FieldValue.arrayUnion({
-                                        vin: vin,
-                                        amount: bidAmount
-                                    })
-                                }).then(() => {
-                                    document.getElementById('bidAmount').value = '';
-                                    showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
-                                    console.log('Bid updated and added to user account successfully');
-                                }).catch((error) => {
-                                    console.error("Error updating user document: ", error);
-                                    showModal("Eroare de ofertă", "A apărut o eroare la actualizarea contului dvs. Vă rugăm să încercați din nou.");
-                                });
-                            }
-                        }).catch((error) => {
-                            console.error("Error fetching user document: ", error);
-                            showModal("Eroare de ofertă", "A apărut o eroare la verificarea contului dvs. Vă rugăm să încercați din nou.");
-                        });
-                    } else {
-                        showModal("Eroare de ofertă", "Utilizatorul nu este autentificat.");
-                    }
-                }).catch((error) => {
-                    console.error("Error updating price: ", error);
-                    showModal("Eroare de ofertă", "A apărut o eroare la trimiterea ofertei dvs. Vă rugăm să încercați din nou.");
-                });
-            } else {
-                showModal("Eroare de ofertă", "Oferta dvs. trebuie să fie mai mare decât prețul curent.");
-                console.log('Bid amount is not greater than current price');
-            }
-        }).catch((error) => {
-            console.error("Error getting document:", error);
-            showModal("Eroare de ofertă", "A apărut o eroare la obținerea informațiilor despre ofertă. Vă rugăm să încercați din nou.");
+                console.log('Current price:', currentPrice);
+    
+                if (bidAmount > currentPrice) {
+                    db.collection("cars").doc(vin).update({
+                        currentPrice: bidAmount,
+                        Num_of_bids: carData.Num_of_bids + 1
+                    }).then(() => {
+                        const user = auth.currentUser;
+                        if (user) {
+                            const userId = user.uid;
+                            const userDocRef = db.collection("users").doc(userId);
+    
+                            userDocRef.get().then((userDoc) => {
+                                if (!userDoc.exists) {
+                                    userDocRef.set({
+                                        bids: [{
+                                            vin: vin,
+                                            amount: bidAmount
+                                        }]
+                                    }).then(() => {
+                                        document.getElementById('bidAmount').value = '';
+                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
+                                        console.log('User document created and bid added successfully');
+                                    }).catch((error) => {
+                                        console.error("Error creating user document: ", error);
+                                        showModal("Eroare de ofertă", "A apărut o eroare la crearea contului dvs. Vă rugăm să încercați din nou.");
+                                    });
+                                } else {
+                                    userDocRef.update({
+                                        bids: firebase.firestore.FieldValue.arrayUnion({
+                                            vin: vin,
+                                            amount: bidAmount
+                                        })
+                                    }).then(() => {
+                                        document.getElementById('bidAmount').value = '';
+                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
+                                        console.log('Bid updated and added to user account successfully');
+                                    }).catch((error) => {
+                                        console.error("Error updating user document: ", error);
+                                        showModal("Eroare de ofertă", "A apărut o eroare la actualizarea contului dvs. Vă rugăm să încercați din nou.");
+                                    });
+                                }
+                            }).catch((error) => {
+                                console.error("Error fetching user document: ", error);
+                                showModal("Eroare de ofertă", "A apărut o eroare la verificarea contului dvs. Vă rugăm să încercați din nou.");
+                            });
+                        } else {
+                            showModal("Eroare de ofertă", "Utilizatorul nu este autentificat.");
+                        }
+                    }).catch((error) => {
+                        console.error("Error updating price: ", error);
+                        showModal("Eroare de ofertă", "A apărut o eroare la trimiterea ofertei dvs. Vă rugăm să încercați din nou.");
+                    });
+                } else {
+                    showModal("Eroare de ofertă", "Oferta dvs. trebuie să fie mai mare decât prețul curent.");
+                    console.log('Bid amount is not greater than current price');
+                }
+            }).catch((error) => {
+                console.error("Error getting document:", error);
+                showModal("Eroare de ofertă", "A apărut o eroare la obținerea informațiilor despre ofertă. Vă rugăm să încercați din nou.");
+            });
+        }).catch(function(error) {
+            // Handle error
+            console.error("Error getting user token:", error);
+            showModal("Eroare de ofertă", "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.");
         });
     }
 
@@ -201,8 +209,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('#bidModal .modal-body').textContent = message;
 
         var modalElement = document.getElementById('bidModal');
-        var myModal = new bootstrap.Modal(modalElement);
+        var myModal = new bootstrap.Modal(modalElement, {
+            backdrop: false // This removes the dark background
+        });
         myModal.show();
+
+        // Ensure the modal can be closed
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            // Add any cleanup or reset code here if necessary
+        });
     }
 
     function updateTitle(car) {
