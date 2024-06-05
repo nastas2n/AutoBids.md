@@ -1,7 +1,3 @@
-// Include Firebase initialization if not already included
-// <script src="path/to/your/firebase-init.js"></script>
-
-let currentArticleIndex = 0;
 let articlesData = [];
 
 function fetchBlogPosts() {
@@ -16,18 +12,20 @@ function fetchBlogPosts() {
                     ...doc.data()
                 });
             });
-            displayCurrentArticle();
+            displayRandomArticle();
         })
         .catch(error => console.error('Error fetching blog data:', error));
 }
 
-function displayCurrentArticle() {
+function displayRandomArticle() {
     if (articlesData.length === 0) return;
+
+    const randomIndex = Math.floor(Math.random() * articlesData.length);
+    const post = articlesData[randomIndex];
 
     const blogCards = document.getElementById('blog-cards');
     blogCards.innerHTML = ''; // Clear previous article
 
-    const post = articlesData[currentArticleIndex];
     const postDiv = document.createElement('div');
     postDiv.classList.add('blog-card');
 
@@ -57,16 +55,9 @@ function displayCurrentArticle() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchBlogPosts();
 
-    const nextButton = document.getElementById('next-article-button');
-    const prevButton = document.getElementById('prev-article-button');
+    const randomButton = document.getElementById('random-article-button');
 
-    nextButton.addEventListener('click', () => {
-        currentArticleIndex = (currentArticleIndex + 1) % articlesData.length;
-        displayCurrentArticle();
-    });
-
-    prevButton.addEventListener('click', () => {
-        currentArticleIndex = (currentArticleIndex - 1 + articlesData.length) % articlesData.length;
-        displayCurrentArticle();
+    randomButton.addEventListener('click', () => {
+        displayRandomArticle();
     });
 });

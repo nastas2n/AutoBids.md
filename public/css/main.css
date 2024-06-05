@@ -295,17 +295,19 @@ body::-webkit-scrollbar-thumb {
   top: 70px;
   right: 0;
   bottom: 0;
-  background: linear-gradient(1turn, #f1f6fd 30%, #edf1f7);
-  box-shadow: 3px 3px 9px rgba(164, 164, 186, 0.2);
-  border-left: 1px solid #fff;
-  border-top: 1px solid #fff;
+  background: rgba(255, 255, 255, 0.2); 
+  backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px); 
+  box-shadow: 3px 3px 9px rgba(164, 164, 186, 0.2); 
+  border-left: 1px solid rgba(255, 255, 255, 0.5); 
+  border-top: 1px solid rgba(255, 255, 255, 0.5); 
   z-index: 99;
   width: 240px;
   padding: 25px 25px 0;
   transform: translate3d(241px, 0, 0);
-  transition: transform 0.5s ease;
+  transition: transform 0.5s ease, background 0.3s ease; /* Added background transition */
+  border-radius: 20px 0 0 20px;
 }
-
 .header__menu--active {
   transform: translate3d(0, 0, 0);
 }
@@ -380,13 +382,19 @@ body::-webkit-scrollbar-thumb {
   fill: #189cf4;
 }
 
+.header__nav-item--dropdown:hover .dropdown-menu {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .header__nav-menu {
   display: flex !important;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
   position: absolute;
-  z-index: -1;
+  z-index: 1000;
   pointer-events: none;
   opacity: 0;
   top: 0;
@@ -510,6 +518,12 @@ body::-webkit-scrollbar-thumb {
   margin-top: -5px;
 }
 
+.header__profile-menu.show {
+  z-index: 1000;
+  pointer-events: auto;
+  opacity: 1;
+}
+
 .header__profile-menu li {
   margin-bottom: 15px;
   width: 100%;
@@ -548,12 +562,6 @@ body::-webkit-scrollbar-thumb {
   fill: #189cf4;
 }
 
-.header__profile-menu.show {
-  z-index: 1000;
-  pointer-events: auto;
-  opacity: 1;
-}
-
 /* Hide the blue button on mobile devices */
 @media (max-width: 768px) {
   .header__action-btn {
@@ -576,7 +584,6 @@ body::-webkit-scrollbar-thumb {
     margin-left: auto;
   }
 }
-
 /* Additional media queries */
 @media (min-width: 576px) {
   .header__action-btn {
@@ -6026,7 +6033,6 @@ body::-webkit-scrollbar-thumb {
   color: #333;
   white-space: pre-wrap; /* Preserve newlines and whitespace */
 }
-
 
 
 

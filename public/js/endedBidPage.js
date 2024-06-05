@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 return 0;
             }
-        }).slice(0, 42); // Limit to 42 images
+        }).slice(0, 40); // Limit to 42 images
 
         prioritizedImages.forEach(photo => {
             const listItem = document.createElement('li');
