@@ -64,12 +64,12 @@ function renderCars(cars) {
             </div>
             <div class="splide__track">
               <ul class="splide__list">
-                ${coverPhotos.map(photo => `<li class="splide__slide"><img src="${photo}" alt="Car image"></li>`).join('')}
+                ${coverPhotos.map(photo => `<li class="splide__slide"><a href="${carDetailUrl}"><img src="${photo}" alt="Car image"></a></li>`).join('')}
               </ul>
             </div>
           </div>
           <div class="car__title">
-          <h3 class="car__name"><a href="${carDetailUrl}">${car.Brand} ${car.Model}</a></h3>
+            <h3 class="car__name"><a href="${carDetailUrl}">${car.Brand} ${car.Model}</a></h3>
             <span class="car__year">${car.Year}</span>
           </div>
           <ul class="car__list">

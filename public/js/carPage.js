@@ -42,50 +42,67 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching car data:', error));
 
-    aiRecommendationButton.addEventListener('click', () => {
-        db.collection("cars").doc(vin).get()
-            .then((doc) => {
-                if (doc.exists) {
-                    const car = doc.data();
-                    if (car.Gpt) {
-                        displayTextWithTypingAnimation(car.Gpt);
+        let animationStarted = false;
+        let typingTimeout; // To store the timeout ID
+        
+        aiRecommendationButton.addEventListener('click', () => {
+            if (animationStarted) {
+                // Stop the animation
+                clearTimeout(typingTimeout);
+                animationStarted = false;
+                return;
+            }
+            
+            db.collection("cars").doc(vin).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const car = doc.data();
+                        if (car.Gpt) {
+                            displayTextWithTypingAnimation(car.Gpt);
+                        } else {
+                            aiRecommendationText.textContent = 'No AI recommendation available.';
+                            aiRecommendationText.style.display = 'block';
+                        }
                     } else {
-                        aiRecommendationText.textContent = 'No AI recommendation available.';
+                        aiRecommendationText.textContent = 'Car not found.';
                         aiRecommendationText.style.display = 'block';
                     }
-                } else {
-                    aiRecommendationText.textContent = 'Car not found.';
+                })
+                .catch(error => {
+                    aiRecommendationText.textContent = 'Error fetching AI recommendation.';
                     aiRecommendationText.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                aiRecommendationText.textContent = 'Error fetching AI recommendation.';
-                aiRecommendationText.style.display = 'block';
-                console.error('Error fetching AI recommendation:', error);
-            });
-    });
-
-    function displayTextWithTypingAnimation(text) {
-        aiRecommendationText.innerHTML = ''; // Clear any existing text
-        aiRecommendationText.style.display = 'block';
-
-        const formattedText = text.replace(/\{#\}/g, '\n'); // Replace {#} with newline characters
-        let index = 0;
-
-        function typeNextCharacter() {
-            if (index < formattedText.length) {
-                if (formattedText[index] === '\n') {
-                    aiRecommendationText.innerHTML += '<br>';
+                    console.error('Error fetching AI recommendation:', error);
+                });
+        });
+        
+        function displayTextWithTypingAnimation(text) {
+            aiRecommendationText.innerHTML = ''; // Clear any existing text
+            aiRecommendationText.style.display = 'block';
+        
+            const formattedText = text.replace(/\{#\}/g, '\n'); // Replace {#} with newline characters
+            let index = 0;
+            animationStarted = true;
+        
+            function typeNextCharacter() {
+                if (index < formattedText.length) {
+                    if (formattedText[index] === '\n') {
+                        aiRecommendationText.innerHTML += '<br>';
+                    } else {
+                        aiRecommendationText.innerHTML += formattedText[index];
+                    }
+                    index++;
+                    typingTimeout = setTimeout(typeNextCharacter, 50); // Adjust typing speed here
                 } else {
-                    aiRecommendationText.innerHTML += formattedText[index];
+                    animationStarted = false; // Animation finished
                 }
-                index++;
-                setTimeout(typeNextCharacter, 50); // Adjust typing speed here
             }
-        }
-
+        
+            
         typeNextCharacter();
     }
+
+
+    
 
     function updateBreadcrumb(car) {
         const breadcrumbActiveItem = document.querySelector('.breadcrumbs__item--active');

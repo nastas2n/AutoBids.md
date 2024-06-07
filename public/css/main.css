@@ -295,19 +295,27 @@ body::-webkit-scrollbar-thumb {
   top: 70px;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.2); 
-  backdrop-filter: blur(10px); 
+  background: rgba(255, 255, 255, 0.4); /* Increased opacity for better readability */
+  backdrop-filter: blur(20px); 
   -webkit-backdrop-filter: blur(10px); 
-  box-shadow: 3px 3px 9px rgba(164, 164, 186, 0.2); 
-  border-left: 1px solid rgba(255, 255, 255, 0.5); 
-  border-top: 1px solid rgba(255, 255, 255, 0.5); 
+  box-shadow: 3px 3px 9px rgba(164, 164, 186, 0.4); /* Increased opacity */
+  border-left: 1px solid rgba(255, 255, 255, 0.7); /* Adjusted border transparency */
+  border-top: 1px solid rgba(255, 255, 255, 0.7); /* Adjusted border transparency */
   z-index: 99;
   width: 240px;
   padding: 25px 25px 0;
   transform: translate3d(241px, 0, 0);
-  transition: transform 0.5s ease, background 0.3s ease; /* Added background transition */
+  transition: transform 0.5s ease, background 0.3s ease;
   border-radius: 20px 0 0 20px;
 }
+
+.header__menu a, .header__menu span {
+  color: #333; /* Darker text color for better readability */
+  background: rgba(255, 255, 255, 0.103); /* Light background behind text */
+  padding: 5px;
+  border-radius: 5px;
+}
+
 .header__menu--active {
   transform: translate3d(0, 0, 0);
 }
@@ -1338,6 +1346,13 @@ body::-webkit-scrollbar-thumb {
   }
 }
 /*Splide*/
+.splide__slide img {
+  transition: transform 0.3s ease;
+}
+
+.splide__slide img:hover {
+  transform: scale(1.1);
+}
 .splide--content .splide__arrows {
   position: relative;
 }
@@ -2454,7 +2469,7 @@ body::-webkit-scrollbar-thumb {
     pointer-events: none;
     overflow: hidden;
     left: 66%;
-    right: -40px;
+    right: 40px;
     top: 25px;
     bottom: 40px;
   }
