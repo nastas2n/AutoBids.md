@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const auth = firebase.auth();
     const db = firebase.firestore();
     const carList = document.getElementById('cars_container');
+    const displayedCars = new Set();  // Set to track displayed VINs
 
     auth.onAuthStateChanged((user) => {
         if (user) {
@@ -31,16 +32,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (bids.length > 0) {
                         carList.innerHTML = ''; // Clear the list before adding items
                         bids.forEach((bid) => {
-                            db.collection('cars').doc(bid.vin).get().then((carDoc) => {
-                                if (carDoc.exists) {
-                                    const carData = carDoc.data();
-                                    renderCarCard(carData, bid);
-                                } else {
-                                    console.error('Car document not found');
-                                }
-                            }).catch((error) => {
-                                console.error('Error fetching car document:', error);
-                            });
+                            if (!displayedCars.has(bid.vin)) {  // Check if the car has already been displayed
+                                displayedCars.add(bid.vin);  // Add VIN to the set
+                                db.collection('cars').doc(bid.vin).get().then((carDoc) => {
+                                    if (carDoc.exists) {
+                                        const carData = carDoc.data();
+                                        renderCarCard(carData, bid);
+                                    } else {
+                                        console.error('Car document not found');
+                                    }
+                                }).catch((error) => {
+                                    console.error('Error fetching car document:', error);
+                                });
+                            }
                         });
                     } else {
                         carList.innerHTML = '<div>No cars bidded on yet.</div>';
@@ -58,7 +62,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function renderCarCard(car, bid) {
-        const carDetailUrl = `car.html?vin=${encodeURIComponent(bid.vin)}`;
+        let carDetailUrl;
+        if (car.BidStatus && car.BidStatus === "Active") {
+            carDetailUrl = `car.html?vin=${encodeURIComponent(bid.vin)}`;
+        } else {
+            carDetailUrl = `endedBidPage.html?vin=${encodeURIComponent(bid.vin)}`;
+        }
         const cardHTML = `
             <div class="cart__card" data-href="${carDetailUrl}">
                 <!-- <div class="cart__img"><img src="${car.imageUrls ? car.imageUrls[0] : ''}" alt="${car.Brand} ${car.Model}"></div> -->
