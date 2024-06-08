@@ -32,10 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateBreadcrumb(car);
                 updateTitle(car);
                 loadCarImages(car);
-                initializeCarSlider();
                 updateOffersAndDetails(car);
                 updateCarSpecifications(car);
                 initializeCountdownTimer('remainingTime', car.ISO_End_Date, vin);
+                // Initialize Swiper only after loading the images
+                initializeCarSlider();
             } else {
                 console.error('Car not found');
             }
@@ -131,30 +132,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function placeBid() {
-        auth.currentUser.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+        auth.currentUser.getIdToken(/* forceRefresh */ true).then(function (idToken) {
             // Send token to your backend via HTTPS
             const bidAmountInput = document.getElementById('bidAmount').value;
             const bidAmount = Number(bidAmountInput);
-    
+
             if (isNaN(bidAmount) || bidAmount <= 0) {
                 showModal("Eroare de ofertă", "Vă rugăm să introduceți o sumă validă pentru ofertă.");
                 return;
             }
-    
+
             console.log('Placing bid:', bidAmount);
-    
+
             db.collection("cars").doc(vin).get().then((doc) => {
                 if (!doc.exists) {
                     console.error("Document does not exist!");
                     showModal("Eroare de ofertă", "Documentul nu există.");
                     return;
                 }
-    
+
                 const carData = doc.data();
                 const currentPrice = carData.currentPrice;
-    
+
                 console.log('Current price:', currentPrice);
-    
+
                 if (bidAmount > currentPrice) {
                     db.collection("cars").doc(vin).update({
                         currentPrice: bidAmount,
@@ -164,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (user) {
                             const userId = user.uid;
                             const userDocRef = db.collection("users").doc(userId);
-    
+
                             userDocRef.get().then((userDoc) => {
                                 if (!userDoc.exists) {
                                     userDocRef.set({
@@ -214,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error("Error getting document:", error);
                 showModal("Eroare de ofertă", "A apărut o eroare la obținerea informațiilor despre ofertă. Vă rugăm să încercați din nou.");
             });
-        }).catch(function(error) {
+        }).catch(function (error) {
             // Handle error
             console.error("Error getting user token:", error);
             showModal("Eroare de ofertă", "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.");
@@ -266,11 +267,11 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 return 0;
             }
-        }).slice(0, 42); // Limit to 42 images
+        }).slice(0, 37); // Limit to 42 images
 
         prioritizedImages.forEach(photo => {
-            const listItem = document.createElement('li');
-            listItem.className = 'splide__slide';
+            const listItem = document.createElement('div');
+            listItem.className = 'swiper-slide';
 
             const img = document.createElement('img');
             img.src = photo;
@@ -284,7 +285,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeCarSlider() {
-        new Splide('.splide', {}).mount();
+        // Initialize Swiper
+        new Swiper('.swiper-container', {
+            loop: true,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            autoplay: {
+                delay: 5000,
+            },
+        });
     }
 
     function updateOffersAndDetails(car) {

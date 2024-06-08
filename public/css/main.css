@@ -1346,6 +1346,7 @@ body::-webkit-scrollbar-thumb {
   }
 }
 /*Splide*/
+<<<<<<< HEAD
 .splide__slide img {
   transition: transform 0.3s ease;
 }
@@ -1353,6 +1354,61 @@ body::-webkit-scrollbar-thumb {
 .splide__slide img:hover {
   transform: scale(1.1);
 }
+=======
+
+/* Customize the pagination dots */
+.swiper-pagination-bullet {
+  background: gray;
+}
+
+/* Hide the dots on mobile devices */
+@media (max-width: 767px) {
+  .swiper-pagination {
+      display: none;
+  }
+}
+
+/* Customize the navigation arrows */
+.swiper-button-next, .swiper-button-prev {
+  background: white;
+  color: lightblue;
+  border-radius: 5px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Arrow SVG paths */
+.swiper-button-next::after, .swiper-button-prev::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.swiper-button-next::after {
+  border-width: 8px 0 8px 12px;
+  border-color: transparent transparent transparent lightblue;
+}
+
+.swiper-button-prev::after {
+  border-width: 8px 12px 8px 0;
+  border-color: transparent lightblue transparent transparent;
+}
+
+/* Adjust arrow positioning for better alignment */
+.swiper-button-next {
+  right: 10px;
+}
+
+.swiper-button-prev {
+  left: 10px;
+}
+
+
+>>>>>>> car_page
 .splide--content .splide__arrows {
   position: relative;
 }

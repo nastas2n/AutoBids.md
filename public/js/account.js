@@ -63,11 +63,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderCarCard(car, bid) {
         let carDetailUrl;
+        let statusMessage = '';
+        let statusClass = '';
+
         if (car.BidStatus && car.BidStatus === "Active") {
+            statusMessage = 'Licitatia este in desfasurare';
+            statusClass = 'text-dark';
             carDetailUrl = `car.html?vin=${encodeURIComponent(bid.vin)}`;
-        } else {
+        } else if (car.BidStatus && car.BidStatus === "Ended") {
             carDetailUrl = `endedBidPage.html?vin=${encodeURIComponent(bid.vin)}`;
+            if (bid.amount >= car.currentPrice) {
+                statusMessage = 'Licitație câștigată';
+                statusClass = 'text-success';
+            } else {
+                statusMessage = 'Licitație pierdută';
+                statusClass = 'text-danger';
+            }
         }
+
         const cardHTML = `
             <div class="cart__card" data-href="${carDetailUrl}">
                 <!-- <div class="cart__img"><img src="${car.imageUrls ? car.imageUrls[0] : ''}" alt="${car.Brand} ${car.Model}"></div> -->
@@ -77,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="cart__current-price"><div class="price-container">Preț curent: ${car.currentPrice}<span> lei</span></div></div>
                         <div class="cart__price"><div class="price-container">Oferta dvs.: ${bid.amount}<span> lei</span></div></div>
                     </div>
+                    <div class="cart__status ${statusClass}">${statusMessage}</div>
                 </div>
             </div>
         `;
