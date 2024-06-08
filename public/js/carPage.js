@@ -43,67 +43,63 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error fetching car data:', error));
 
-        let animationStarted = false;
-        let typingTimeout; // To store the timeout ID
+    let animationStarted = false;
+    let typingTimeout; // To store the timeout ID
+    
+    aiRecommendationButton.addEventListener('click', () => {
+        if (animationStarted) {
+            // Stop the animation
+            clearTimeout(typingTimeout);
+            animationStarted = false;
+            return;
+        }
         
-        aiRecommendationButton.addEventListener('click', () => {
-            if (animationStarted) {
-                // Stop the animation
-                clearTimeout(typingTimeout);
-                animationStarted = false;
-                return;
-            }
-            
-            db.collection("cars").doc(vin).get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const car = doc.data();
-                        if (car.Gpt) {
-                            displayTextWithTypingAnimation(car.Gpt);
-                        } else {
-                            aiRecommendationText.textContent = 'No AI recommendation available.';
-                            aiRecommendationText.style.display = 'block';
-                        }
+        db.collection("cars").doc(vin).get()
+            .then((doc) => {
+                if (doc.exists) {
+                    const car = doc.data();
+                    if (car.Gpt) {
+                        displayTextWithTypingAnimation(car.Gpt);
                     } else {
-                        aiRecommendationText.textContent = 'Car not found.';
+                        aiRecommendationText.textContent = 'No AI recommendation available.';
                         aiRecommendationText.style.display = 'block';
                     }
-                })
-                .catch(error => {
-                    aiRecommendationText.textContent = 'Error fetching AI recommendation.';
-                    aiRecommendationText.style.display = 'block';
-                    console.error('Error fetching AI recommendation:', error);
-                });
-        });
-        
-        function displayTextWithTypingAnimation(text) {
-            aiRecommendationText.innerHTML = ''; // Clear any existing text
-            aiRecommendationText.style.display = 'block';
-        
-            const formattedText = text.replace(/\{#\}/g, '\n'); // Replace {#} with newline characters
-            let index = 0;
-            animationStarted = true;
-        
-            function typeNextCharacter() {
-                if (index < formattedText.length) {
-                    if (formattedText[index] === '\n') {
-                        aiRecommendationText.innerHTML += '<br>';
-                    } else {
-                        aiRecommendationText.innerHTML += formattedText[index];
-                    }
-                    index++;
-                    typingTimeout = setTimeout(typeNextCharacter, 50); // Adjust typing speed here
                 } else {
-                    animationStarted = false; // Animation finished
+                    aiRecommendationText.textContent = 'Car not found.';
+                    aiRecommendationText.style.display = 'block';
                 }
+            })
+            .catch(error => {
+                aiRecommendationText.textContent = 'Error fetching AI recommendation.';
+                aiRecommendationText.style.display = 'block';
+                console.error('Error fetching AI recommendation:', error);
+            });
+    });
+    
+    function displayTextWithTypingAnimation(text) {
+        aiRecommendationText.innerHTML = ''; // Clear any existing text
+        aiRecommendationText.style.display = 'block';
+    
+        const formattedText = text.replace(/\{#\}/g, '\n'); // Replace {#} with newline characters
+        let index = 0;
+        animationStarted = true;
+    
+        function typeNextCharacter() {
+            if (index < formattedText.length) {
+                if (formattedText[index] === '\n') {
+                    aiRecommendationText.innerHTML += '<br>';
+                } else {
+                    aiRecommendationText.innerHTML += formattedText[index];
+                }
+                index++;
+                typingTimeout = setTimeout(typeNextCharacter, 50); // Adjust typing speed here
+            } else {
+                animationStarted = false; // Animation finished
             }
-        
-            
+        }
+    
         typeNextCharacter();
     }
-
-
-    
 
     function updateBreadcrumb(car) {
         const breadcrumbActiveItem = document.querySelector('.breadcrumbs__item--active');
@@ -128,41 +124,41 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showLoginModal(event) {
         event.preventDefault();
-        showModal("Utilizatorul nu este autentificat", "Trebuie să vă creați un cont sau să vă logați pentru a putea plasa o ofertă.");
+        showModal("Utilizatorul nu este autentificat", "Trebuie să vă creați un cont sau să vă logați pentru a putea plasa o ofertă.", 'bidModal');
     }
 
     function placeBid() {
-        auth.currentUser.getIdToken(/* forceRefresh */ true).then(function (idToken) {
-            // Send token to your backend via HTTPS
-            const bidAmountInput = document.getElementById('bidAmount').value;
-            const bidAmount = Number(bidAmountInput);
+        const user = auth.currentUser;
+        if (user) {
+            user.getIdToken(/* forceRefresh */ true).then(function (idToken) {
+                // Send token to your backend via HTTPS
+                const bidAmountInput = document.getElementById('bidAmount').value;
+                const bidAmount = Number(bidAmountInput);
 
-            if (isNaN(bidAmount) || bidAmount <= 0) {
-                showModal("Eroare de ofertă", "Vă rugăm să introduceți o sumă validă pentru ofertă.");
-                return;
-            }
-
-            console.log('Placing bid:', bidAmount);
-
-            db.collection("cars").doc(vin).get().then((doc) => {
-                if (!doc.exists) {
-                    console.error("Document does not exist!");
-                    showModal("Eroare de ofertă", "Documentul nu există.");
+                if (isNaN(bidAmount) || bidAmount <= 0) {
+                    showModal("Eroare de ofertă", "Vă rugăm să introduceți o sumă validă pentru ofertă.", 'bidModal');
                     return;
                 }
 
-                const carData = doc.data();
-                const currentPrice = carData.currentPrice;
+                console.log('Placing bid:', bidAmount);
 
-                console.log('Current price:', currentPrice);
+                db.collection("cars").doc(vin).get().then((doc) => {
+                    if (!doc.exists) {
+                        console.error("Document does not exist!");
+                        showModal("Eroare de ofertă", "Documentul nu există.", 'bidModal');
+                        return;
+                    }
 
-                if (bidAmount > currentPrice) {
-                    db.collection("cars").doc(vin).update({
-                        currentPrice: bidAmount,
-                        Num_of_bids: carData.Num_of_bids + 1
-                    }).then(() => {
-                        const user = auth.currentUser;
-                        if (user) {
+                    const carData = doc.data();
+                    const currentPrice = carData.currentPrice;
+
+                    console.log('Current price:', currentPrice);
+
+                    if (bidAmount > currentPrice) {
+                        db.collection("cars").doc(vin).update({
+                            currentPrice: bidAmount,
+                            Num_of_bids: carData.Num_of_bids + 1
+                        }).then(() => {
                             const userId = user.uid;
                             const userDocRef = db.collection("users").doc(userId);
 
@@ -175,11 +171,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                         }]
                                     }).then(() => {
                                         document.getElementById('bidAmount').value = '';
-                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
+                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!", 'bidModal');
                                         console.log('User document created and bid added successfully');
                                     }).catch((error) => {
                                         console.error("Error creating user document: ", error);
-                                        showModal("Eroare de ofertă", "A apărut o eroare la crearea contului dvs. Vă rugăm să încercați din nou.");
+                                        showModal("Eroare de ofertă", "A apărut o eroare la crearea contului dvs. Vă rugăm să încercați din nou.", 'bidModal');
                                     });
                                 } else {
                                     userDocRef.update({
@@ -189,44 +185,49 @@ document.addEventListener('DOMContentLoaded', function () {
                                         })
                                     }).then(() => {
                                         document.getElementById('bidAmount').value = '';
-                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!");
+                                        showModal("Ofertă reușită", "Oferta dvs. a fost trimisă cu succes!", 'bidModal');
                                         console.log('Bid updated and added to user account successfully');
                                     }).catch((error) => {
                                         console.error("Error updating user document: ", error);
-                                        showModal("Eroare de ofertă", "A apărut o eroare la actualizarea contului dvs. Vă rugăm să încercați din nou.");
+                                        showModal("Eroare de ofertă", "A apărut o eroare la actualizarea contului dvs. Vă rugăm să încercați din nou.", 'bidModal');
                                     });
                                 }
                             }).catch((error) => {
                                 console.error("Error fetching user document: ", error);
-                                showModal("Eroare de ofertă", "A apărut o eroare la verificarea contului dvs. Vă rugăm să încercați din nou.");
+                                showModal("Eroare de ofertă", "A apărut o eroare la verificarea contului dvs. Vă rugăm să încercați din nou.", 'bidModal');
                             });
-                        } else {
-                            showModal("Eroare de ofertă", "Utilizatorul nu este autentificat.");
-                        }
-                    }).catch((error) => {
-                        console.error("Error updating price: ", error);
-                        showModal("Eroare de ofertă", "A apărut o eroare la trimiterea ofertei dvs. Vă rugăm să încercați din nou.");
-                    });
-                } else {
-                    showModal("Eroare de ofertă", "Oferta dvs. trebuie să fie mai mare decât prețul curent.");
-                    console.log('Bid amount is not greater than current price');
-                }
-            }).catch((error) => {
-                console.error("Error getting document:", error);
-                showModal("Eroare de ofertă", "A apărut o eroare la obținerea informațiilor despre ofertă. Vă rugăm să încercați din nou.");
+                        }).catch((error) => {
+                            console.error("Error updating price: ", error);
+                            showModal("Eroare de ofertă", "A apărut o eroare la trimiterea ofertei dvs. Vă rugăm să încercați din nou.", 'bidModal');
+                        });
+                    } else {
+                        showModal("Eroare de ofertă", "Oferta dvs. trebuie să fie mai mare decât prețul curent.", 'bidModal');
+                        console.log('Bid amount is not greater than current price');
+                    }
+                }).catch((error) => {
+                    console.error("Error getting document:", error);
+                    showModal("Eroare de ofertă", "A apărut o eroare la obținerea informațiilor despre ofertă. Vă rugăm să încercați din nou.", 'bidModal');
+                });
+            }).catch(function (error) {
+                // Handle error
+                console.error("Error getting user token:", error);
+                showModal("Eroare de ofertă", "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.", 'bidModal');
             });
-        }).catch(function (error) {
-            // Handle error
-            console.error("Error getting user token:", error);
-            showModal("Eroare de ofertă", "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.");
-        });
+        } else {
+            showModal("Eroare de ofertă", "Utilizatorul nu este autentificat.", 'bidModal');
+        }
     }
 
-    function showModal(title, message) {
-        document.getElementById('bidModalLabel').textContent = title;
-        document.querySelector('#bidModal .modal-body').textContent = message;
+    function showModal(title, message, modalId) {
+        const modalElement = document.getElementById(modalId);
+        if (!modalElement) {
+            console.error(`Modal with ID ${modalId} not found`);
+            return;
+        }
 
-        var modalElement = document.getElementById('bidModal');
+        document.getElementById(`${modalId}Label`).textContent = title;
+        modalElement.querySelector('.modal-body').textContent = message;
+
         var myModal = new bootstrap.Modal(modalElement, {
             backdrop: false // This removes the dark background
         });
@@ -236,7 +237,24 @@ document.addEventListener('DOMContentLoaded', function () {
         modalElement.addEventListener('hidden.bs.modal', function () {
             // Add any cleanup or reset code here if necessary
         });
+
+        // Check if close button exists before adding event listener
+        const closeButton = modalElement.querySelector('.close-modal-button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                myModal.hide();
+            });
+        }
+
+        // Auto close the modal after 5 seconds (5000 milliseconds)
+        setTimeout(() => {
+            myModal.hide();
+        }, 5000);
     }
+
+    // Example close button in the HTML modal structure
+    // Assuming you have a button with class 'close-modal-button' in your modal's HTML
+    // <button type="button" class="btn btn-secondary close-modal-button" data-bs-dismiss="modal">Close</button>
 
     function updateTitle(car) {
         const titleElement = document.querySelector('.main__title--page h1');
@@ -326,32 +344,3 @@ document.addEventListener('DOMContentLoaded', function () {
             { id: 'specEndDate', value: car.End_date },
             { id: 'specEngineCapacity', value: car.Engine_capacity },
             { id: 'specHorsePower', value: `${car.Horse_power} HP` },
-            { id: 'specDrivetrain', value: car.Drivetrain },
-            { id: 'specStatus', value: car.Status }
-        ];
-
-        fields.forEach(field => {
-            const element = document.getElementById(field.id);
-            if (element) {
-                element.textContent = field.value;
-            } else {
-                console.error(`Element with ID ${field.id} not found`);
-            }
-        });
-    }
-
-    function listenForPriceUpdates(vin) {
-        db.collection("cars").doc(vin).onSnapshot((doc) => {
-            if (doc.exists) {
-                const carData = doc.data();
-                document.getElementById('currentBid').textContent = `${carData.currentPrice} lei`;
-                document.getElementById('numOfBids').textContent = carData.Num_of_bids;
-                document.getElementById('bidAmount').value = '';
-            } else {
-                console.log("No such document!");
-            }
-        });
-    }
-
-    listenForPriceUpdates(vin);
-});

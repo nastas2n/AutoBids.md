@@ -34,17 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    let animationStarted = false;
-    let typingTimeout; // To store the timeout ID
-    
     aiRecommendationButton.addEventListener('click', () => {
-        if (animationStarted) {
-            // Stop the animation
-            clearTimeout(typingTimeout);
-            animationStarted = false;
-            return;
-        }
-        
         db.collection("cars").doc(vin).get()
             .then((doc) => {
                 if (doc.exists) {
@@ -66,15 +56,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error fetching AI recommendation:', error);
             });
     });
-    
+
     function displayTextWithTypingAnimation(text) {
         aiRecommendationText.innerHTML = ''; // Clear any existing text
         aiRecommendationText.style.display = 'block';
-    
+
         const formattedText = text.replace(/\{#\}/g, '\n'); // Replace {#} with newline characters
         let index = 0;
-        animationStarted = true;
-    
+
         function typeNextCharacter() {
             if (index < formattedText.length) {
                 if (formattedText[index] === '\n') {
@@ -83,15 +72,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     aiRecommendationText.innerHTML += formattedText[index];
                 }
                 index++;
-                typingTimeout = setTimeout(typeNextCharacter, 50); // Adjust typing speed here
-            } else {
-                animationStarted = false; // Animation finished
+                setTimeout(typeNextCharacter, 50); // Adjust typing speed here
             }
         }
-    
+
         typeNextCharacter();
     }
-    
+
 
 
 
